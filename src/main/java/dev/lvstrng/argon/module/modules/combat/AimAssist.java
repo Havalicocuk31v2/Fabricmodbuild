@@ -1,5 +1,7 @@
 package dev.lvstrng.argon.module.modules.combat;
+
 import dev.lvstrng.argon.module.Module;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.MathHelper;
@@ -7,14 +9,15 @@ import net.minecraft.util.math.Vec3d;
 import org.lwjgl.glfw.GLFW;
 
 public class AimAssist extends Module {
-    public float speed = 1.2f; // Polar için çok düşük/smooth hız
+    protected static final MinecraftClient mc = MinecraftClient.getInstance();
+    public float speed = 1.2f;
     public double range = 4.2;
 
     public AimAssist() { super("Aim Assist", GLFW.GLFW_KEY_NONE); }
 
     @Override
     public void onTick() {
-        if (mc.currentScreen != null || mc.player == null) return;
+        if (mc.currentScreen != null || mc.player == null || mc.world == null) return;
         Entity target = getTarget();
         if (target != null) {
             Vec3d targetPos = target.getPos().add(0, target.getStandingEyeHeight() - 0.15, 0);
@@ -28,7 +31,6 @@ public class AimAssist extends Module {
             float targetYaw = (float) MathHelper.wrapDegrees(Math.toDegrees(Math.atan2(diffZ, diffX)) - 90.0);
             float targetPitch = (float) MathHelper.wrapDegrees(-Math.toDegrees(Math.atan2(diffY, diffXZ)));
 
-            // Smooth Movement
             mc.player.setYaw(lerpAngle(mc.player.getYaw(), targetYaw, speed));
             mc.player.setPitch(lerpAngle(mc.player.getPitch(), targetPitch, speed));
         }
