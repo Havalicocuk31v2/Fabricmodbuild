@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "immediatelyfast",
+  "version": "1.2.10",
+  "name": "ImmediatelyFast",
+  "description": "Speed up immediate mode rendering in Minecraft.",
+  "authors": ["RaphiMC"],
+  "contact": {
+    "homepage": "https://github.com/RaphiMC/ImmediatelyFast",
+    "sources": "https://github.com/RaphiMC/ImmediatelyFast"
+  },
+  "license": "GNU LGPLv3",
+  "icon": "assets/immediatelyfast/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["dev.lvstrng.argon.Argon"]
+  },
+  "mixins": ["immediatelyfast.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.14.22",
+    "minecraft": "1.20.1"
+  }
+}
