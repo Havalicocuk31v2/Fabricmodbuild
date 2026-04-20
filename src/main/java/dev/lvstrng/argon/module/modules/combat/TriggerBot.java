@@ -4,7 +4,6 @@ import dev.lvstrng.argon.module.Module;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Hand;
-import org.lwjgl.glfw.GLFW;
 import java.util.Random;
 
 public class TriggerBot extends Module {
@@ -12,7 +11,7 @@ public class TriggerBot extends Module {
     private long lastHit = 0;
     private final Random rand = new Random();
 
-    public TriggerBot() { super("Trigger Bot", GLFW.GLFW_KEY_NONE); }
+    public TriggerBot() { super("Trigger Bot", -1); }
 
     @Override
     public void onTick() {
