@@ -6,14 +6,13 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
-import org.lwjgl.glfw.GLFW;
 
 public class AimAssist extends Module {
     protected static final MinecraftClient mc = MinecraftClient.getInstance();
     public float speed = 1.2f;
     public double range = 4.2;
 
-    public AimAssist() { super("Aim Assist", GLFW.GLFW_KEY_NONE); }
+    public AimAssist() { super("Aim Assist", -1); }
 
     @Override
     public void onTick() {
