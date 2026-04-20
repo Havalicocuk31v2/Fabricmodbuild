@@ -1,6 +1,7 @@
 package dev.lvstrng.argon.module.modules.combat;
 
 import dev.lvstrng.argon.module.Module;
+import dev.lvstrng.argon.module.Setting;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -9,10 +10,16 @@ import net.minecraft.util.math.Vec3d;
 
 public class AimAssist extends Module {
     protected static final MinecraftClient mc = MinecraftClient.getInstance();
-    public float speed = 1.2f;
+    
+    public Setting speed = new Setting("Speed", 1.2, 0, 100);
+    public Setting smoothness = new Setting("Smoothness", 3.0, 1, 10);
     public double range = 4.2;
 
-    public AimAssist() { super("Aim Assist", -1); }
+    public AimAssist() { 
+        super("Aim Assist", -1);
+        addSetting(speed);
+        addSetting(smoothness);
+    }
 
     @Override
     public void onTick() {
@@ -22,22 +29,14 @@ public class AimAssist extends Module {
             Vec3d targetPos = target.getPos().add(0, target.getStandingEyeHeight() - 0.15, 0);
             Vec3d playerPos = mc.player.getEyePos();
             
-            double diffX = targetPos.x - playerPos.x;
-            double diffY = targetPos.y - playerPos.y;
-            double diffZ = targetPos.z - playerPos.z;
-            double diffXZ = Math.sqrt(diffX * diffX + diffZ * diffZ);
+            float targetYaw = (float) MathHelper.wrapDegrees(Math.toDegrees(Math.atan2(targetPos.z - playerPos.z, targetPos.x - playerPos.x)) - 90.0);
+            float targetPitch = (float) MathHelper.wrapDegrees(-Math.toDegrees(Math.atan2(targetPos.y - playerPos.y, Math.sqrt(Math.pow(targetPos.x - playerPos.x, 2) + Math.pow(targetPos.z - playerPos.z, 2)))));
 
-            float targetYaw = (float) MathHelper.wrapDegrees(Math.toDegrees(Math.atan2(diffZ, diffX)) - 90.0);
-            float targetPitch = (float) MathHelper.wrapDegrees(-Math.toDegrees(Math.atan2(diffY, diffXZ)));
-
-            mc.player.setYaw(lerpAngle(mc.player.getYaw(), targetYaw, speed));
-            mc.player.setPitch(lerpAngle(mc.player.getPitch(), targetPitch, speed));
+            // Polar Bypass Smooth Logic: Titremeyi engeller
+            float softSpeed = (float) (speed.getValue() / (smoothness.getValue() * 10));
+            mc.player.setYaw(mc.player.getYaw() + MathHelper.clamp(MathHelper.wrapDegrees(targetYaw - mc.player.getYaw()), -softSpeed, softSpeed));
+            mc.player.setPitch(mc.player.getPitch() + MathHelper.clamp(MathHelper.wrapDegrees(targetPitch - mc.player.getPitch()), -softSpeed, softSpeed));
         }
-    }
-
-    private float lerpAngle(float start, float end, float step) {
-        float diff = MathHelper.wrapDegrees(end - start);
-        return start + MathHelper.clamp(diff, -step, step);
     }
 
     private Entity getTarget() {
