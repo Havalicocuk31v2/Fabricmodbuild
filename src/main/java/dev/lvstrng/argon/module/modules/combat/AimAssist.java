@@ -3,13 +3,11 @@ package dev.lvstrng.argon.module.modules.combat;
 import dev.lvstrng.argon.module.Module;
 import dev.lvstrng.argon.module.Setting;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.util.InputUtil;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.MathHelper;
 
 public class AimAssist extends Module {
     protected static final MinecraftClient mc = MinecraftClient.getInstance();
-    
     public Setting speed = new Setting("Speed", 5.0, 0, 100);
     public Setting range = new Setting("Range", 4.2, 3.0, 6.0);
     public Setting onHead = new Setting("On the Head", true);
@@ -23,14 +21,8 @@ public class AimAssist extends Module {
 
     @Override
     public void onTick() {
-        // TUŞ KONTROLÜ: Eğer bir tuş atandıysa ve basılı değilse çalışma
-        if (this.getKey() != -1) {
-            if (!InputUtil.isKeyPressed(mc.getWindow().getHandle(), this.getKey())) {
-                return; 
-            }
-        }
-
-        if (!this.isEnabled() || mc.currentScreen != null || mc.player == null) return;
+        // isWorking: Tuşla Toggle yapıldıysa çalışır
+        if (!this.isEnabled() || !this.isWorking() || mc.currentScreen != null || mc.player == null) return;
         
         PlayerEntity target = getTarget();
         if (target != null) {
@@ -44,11 +36,10 @@ public class AimAssist extends Module {
             float targetYaw = (float) MathHelper.wrapDegrees(Math.toDegrees(Math.atan2(diffZ, diffX)) - 90.0);
             float targetPitch = (float) MathHelper.wrapDegrees(-Math.toDegrees(Math.atan2(diffY, diffXZ)));
 
-            // --- TİTREME ÖNLEYİCİ ALGORİTMA (Sıfır Sarsıntı) ---
             float yawDiff = MathHelper.wrapDegrees(targetYaw - mc.player.getYaw());
             float pitchDiff = MathHelper.wrapDegrees(targetPitch - mc.player.getPitch());
 
-            // Hız ayarını daha insansı bir yumuşatmaya çeviriyoruz
+            // TİTREME SIFIR: Exponential smoothing algoritması
             double smoothing = Math.max(1.0, 20.0 - (speed.getValue() / 5.0)); 
             
             if (Math.abs(yawDiff) > 0.01) {
