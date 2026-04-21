@@ -7,80 +7,99 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
+import org.lwjgl.glfw.GLFW;
 
 public class ClickGui extends Screen {
     protected static final MinecraftClient mc = MinecraftClient.getInstance();
     private Module selectedModule = null;
-    private boolean binding = false;
+    private Module bindingModule = null;
 
-    public ClickGui() { super(Text.of("Argon Menu")); }
+    public ClickGui() { super(Text.of("Argon Pro")); }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        this.renderBackground(context);
-        int x = 40, y = 40, width = 110;
+        int x = 50, y = 50, width = 120;
         
-        // --- HEADER ---
-        context.fill(x, y, x + width, y + 16, 0xDD0C0C0C);
-        context.fill(x, y, x + 2, y + 16, 0xFF00FBFF);
-        context.drawText(textRenderer, "⚔ Combat", x + 8, y + 4, 0xFFFFFFFF, false);
+        // --- CATEGORY HEADER ---
+        context.fill(x, y - 2, x + width, y + 16, 0xFF101010);
+        context.fill(x, y + 16, x + width, y + 17, 0xFF00FBFF); // Neon Mavi Çizgi
+        context.drawText(textRenderer, "COMBAT", x + 6, y + 4, 0xFF00FBFF, false);
         
-        y += 16;
+        y += 18;
         for (Module m : Argon.modules) {
-            boolean hovered = mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + 14;
-            context.fill(x, y, x + width, y + 14, hovered ? 0xEE151515 : 0xAA080808); 
-            int color = m.isEnabled() ? 0xFF00FBFF : 0xFFBBBBBB;
+            boolean hovered = mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + 16;
+            context.fill(x, y, x + width, y + 16, hovered ? 0xFF1A1A1A : 0xFF121212);
             
-            String text = m.getName() + (m.getKey() != -1 ? " [" + (char)m.getKey() + "]" : "");
-            context.drawText(textRenderer, text, x + 8, y + 3, color, false);
+            int color = m.isEnabled() ? 0xFF00FBFF : 0xFFFFFFFF;
+            String keyText = bindingModule == m ? "???" : (m.getKey() == -1 ? "" : "[" + GLFW.glfwGetKeyName(m.getKey(), 0).toUpperCase() + "]");
+            context.drawText(textRenderer, m.getName() + " " + keyText, x + 6, y + 4, color, false);
 
             if (selectedModule == m) {
+                int sx = x + width + 5;
                 int sy = y;
                 for (Setting s : m.getSettings()) {
-                    context.fill(x + width + 5, sy, x + width + 120, sy + 14, 0xDD0C0C0C);
-                    context.drawText(textRenderer, s.getName() + ": " + String.format("%.1f", s.getValue()), x + width + 10, sy + 3, 0xFFFFFFFF, false);
-                    sy += 14;
+                    context.fill(sx, sy, sx + 100, sy + 20, 0xFF121212);
+                    context.drawText(textRenderer, s.name + ": " + s.value, sx + 4, sy + 2, 0xFFBBBBBB, false);
+                    
+                    // SLIDER BACKGROUND
+                    context.fill(sx + 4, sy + 12, sx + 96, sy + 14, 0xFF202020);
+                    // SLIDER FILL
+                    double renderWidth = (s.value - s.min) / (s.max - s.min) * 92;
+                    context.fill(sx + 4, sy + 12, (int)(sx + 4 + renderWidth), sy + 14, 0xFF00FBFF);
+
+                    if (s.dragging) {
+                        double val = ((mouseX - (sx + 4)) / 92.0) * (s.max - s.min) + s.min;
+                        s.setValue(val);
+                    }
+                    sy += 22;
                 }
             }
-            y += 14;
+            y += 17;
         }
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        int x = 40, y = 56;
+        int x = 50, y = 68;
         for (Module m : Argon.modules) {
-            if (mouseX >= x && mouseX <= x + 110 && mouseY >= y && mouseY <= y + 14) {
-                if (button == 0) m.toggle(); // Sol tık: Aç/Kapat
-                if (button == 1) selectedModule = (selectedModule == m) ? null : m; // Sağ tık: Ayar Menüsü
-                if (button == 2) binding = true; // Orta tık: Tuş Ata
+            if (mouseX >= x && mouseX <= x + 120 && mouseY >= y && mouseY <= y + 16) {
+                if (button == 0) m.toggle();
+                if (button == 1) selectedModule = (selectedModule == m) ? null : m;
+                if (button == 2) bindingModule = m; // Orta tık: Bind Başlat
                 return true;
             }
-            // Ayarların üzerine tıklandığında değer değiştirme mantığı
-            if (selectedModule == m && mouseX >= x + 115 && mouseX <= x + 230) {
-                int sy = y;
+            if (selectedModule == m) {
+                int sx = x + 125, sy = y;
                 for (Setting s : m.getSettings()) {
-                    if (mouseY >= sy && mouseY <= sy + 14) {
-                        if (button == 0) s.setValue(s.getValue() + 0.1); // Sol tık: Arttır
-                        if (button == 1) s.setValue(s.getValue() - 0.1); // Sağ tık: Azalt
+                    if (mouseX >= sx && mouseX <= sx + 100 && mouseY >= sy && mouseY <= sy + 20) {
+                        s.dragging = true;
                         return true;
                     }
-                    sy += 14;
+                    sy += 22;
                 }
             }
-            y += 14;
+            y += 17;
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        for (Module m : Argon.modules) {
+            for (Setting s : m.getSettings()) s.dragging = false;
+        }
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (binding && selectedModule != null) {
-            selectedModule.setKey(keyCode);
-            binding = false;
+        if (bindingModule != null) {
+            if (keyCode == GLFW.GLFW_KEY_ESCAPE || keyCode == GLFW.GLFW_KEY_BACKSPACE) bindingModule.setKey(-1);
+            else bindingModule.setKey(keyCode);
+            bindingModule = null;
             return true;
         }
-        if (keyCode == 256) { mc.setScreen(null); return true; }
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE) { mc.setScreen(null); return true; }
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 }
