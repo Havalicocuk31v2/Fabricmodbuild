@@ -3,7 +3,7 @@ package dev.lvstrng.argon.module;
 public class Setting {
     public String name;
     public double value, min, max;
-    public boolean dragging = false; // Slider sürükleme durumu
+    public boolean dragging = false;
 
     public Setting(String name, double defaultValue, double min, double max) {
         this.name = name;
