@@ -11,7 +11,7 @@ public class TriggerBot extends Module {
     protected static final MinecraftClient mc = MinecraftClient.getInstance();
     private long lastHit = 0;
     private final Random rand = new Random();
-    public Setting ms = new Setting("MS Delay", 100, 10, 500);
+    public Setting ms = new Setting("MS Delay", 100, 10, 1000); // 1000'e çıkarıldı
 
     public TriggerBot() { 
         super("Trigger Bot", -1);
@@ -23,9 +23,8 @@ public class TriggerBot extends Module {
         if (!this.isEnabled() || mc.currentScreen != null || mc.player == null) return;
         
         if (mc.targetedEntity instanceof PlayerEntity target && target.isAlive()) {
-            // Senin MS ayarın + %5-10 arası çok küçük sapma
-            long baseDelay = (long) ms.getValue();
-            long dynamicDelay = baseDelay + rand.nextInt(Math.max(1, (int)(baseDelay * 0.1)));
+            // Polar Bypass: Dinamik MS sapması
+            long dynamicDelay = (long) (ms.getValue() + rand.nextInt(30));
             
             if (System.currentTimeMillis() - lastHit >= dynamicDelay) {
                 mc.interactionManager.attackEntity(mc.player, target);
