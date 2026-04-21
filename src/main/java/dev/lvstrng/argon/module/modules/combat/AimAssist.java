@@ -3,6 +3,7 @@ package dev.lvstrng.argon.module.modules.combat;
 import dev.lvstrng.argon.module.Module;
 import dev.lvstrng.argon.module.Setting;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.util.InputUtil;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.MathHelper;
 
@@ -12,23 +13,28 @@ public class AimAssist extends Module {
     public Setting speed = new Setting("Speed", 5.0, 0, 100);
     public Setting range = new Setting("Range", 4.2, 3.0, 6.0);
     public Setting onHead = new Setting("On the Head", true);
-    public Setting onChest = new Setting("On the Chest", false);
 
     public AimAssist() { 
         super("Aim Assist", -1);
         addSetting(speed);
         addSetting(range);
         addSetting(onHead);
-        addSetting(onChest);
     }
 
     @Override
     public void onTick() {
+        // TUŞ KONTROLÜ: Eğer bir tuş atandıysa ve basılı değilse çalışma
+        if (this.getKey() != -1) {
+            if (!InputUtil.isKeyPressed(mc.getWindow().getHandle(), this.getKey())) {
+                return; 
+            }
+        }
+
         if (!this.isEnabled() || mc.currentScreen != null || mc.player == null) return;
         
         PlayerEntity target = getTarget();
         if (target != null) {
-            double targetY = onHead.isEnabled() ? target.getEyeY() - 0.1 : target.getY() + (target.getHeight() / 1.5);
+            double targetY = onHead.isEnabled() ? target.getEyeY() - 0.12 : target.getY() + (target.getHeight() / 1.5);
             
             double diffX = target.getX() - mc.player.getX();
             double diffZ = target.getZ() - mc.player.getZ();
@@ -38,24 +44,25 @@ public class AimAssist extends Module {
             float targetYaw = (float) MathHelper.wrapDegrees(Math.toDegrees(Math.atan2(diffZ, diffX)) - 90.0);
             float targetPitch = (float) MathHelper.wrapDegrees(-Math.toDegrees(Math.atan2(diffY, diffXZ)));
 
+            // --- TİTREME ÖNLEYİCİ ALGORİTMA (Sıfır Sarsıntı) ---
             float yawDiff = MathHelper.wrapDegrees(targetYaw - mc.player.getYaw());
             float pitchDiff = MathHelper.wrapDegrees(targetPitch - mc.player.getPitch());
 
-            // Titreme engelleyici yumuşak geçiş hızı
-            float currentSpeed = (float) (speed.getValue() * 0.15);
-
-            if (Math.abs(yawDiff) > 0.05) {
-                mc.player.setYaw(mc.player.getYaw() + MathHelper.clamp(yawDiff, -currentSpeed, currentSpeed));
+            // Hız ayarını daha insansı bir yumuşatmaya çeviriyoruz
+            double smoothing = Math.max(1.0, 20.0 - (speed.getValue() / 5.0)); 
+            
+            if (Math.abs(yawDiff) > 0.01) {
+                mc.player.setYaw((float) (mc.player.getYaw() + (yawDiff / smoothing)));
             }
-            if (Math.abs(pitchDiff) > 0.05) {
-                mc.player.setPitch(mc.player.getPitch() + MathHelper.clamp(pitchDiff, -currentSpeed, currentSpeed));
+            if (Math.abs(pitchDiff) > 0.01) {
+                mc.player.setPitch((float) (mc.player.getPitch() + (pitchDiff / smoothing)));
             }
         }
     }
 
     private PlayerEntity getTarget() {
         for (PlayerEntity e : mc.world.getPlayers()) {
-            if (e != mc.player && e.isAlive() && mc.player.distanceTo(e) <= range.getValue()) return e;
+            if (e != mc.player && e.isAlive() && mc.player.canSee(e) && mc.player.distanceTo(e) <= range.getValue()) return e;
         }
         return null;
     }
