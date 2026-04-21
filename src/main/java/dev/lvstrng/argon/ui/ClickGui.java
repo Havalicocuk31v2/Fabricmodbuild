@@ -19,10 +19,8 @@ public class ClickGui extends Screen {
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         int x = 50, y = 50, width = 120;
-        
-        // --- CATEGORY HEADER ---
         context.fill(x, y - 2, x + width, y + 16, 0xFF101010);
-        context.fill(x, y + 16, x + width, y + 17, 0xFF00FBFF); // Neon Mavi Çizgi
+        context.fill(x, y + 16, x + width, y + 17, 0xFF00FBFF);
         context.drawText(textRenderer, "COMBAT", x + 6, y + 4, 0xFF00FBFF, false);
         
         y += 18;
@@ -31,19 +29,17 @@ public class ClickGui extends Screen {
             context.fill(x, y, x + width, y + 16, hovered ? 0xFF1A1A1A : 0xFF121212);
             
             int color = m.isEnabled() ? 0xFF00FBFF : 0xFFFFFFFF;
-            String keyText = bindingModule == m ? "???" : (m.getKey() == -1 ? "" : "[" + GLFW.glfwGetKeyName(m.getKey(), 0).toUpperCase() + "]");
-            context.drawText(textRenderer, m.getName() + " " + keyText, x + 6, y + 4, color, false);
+            String keyName = m.getKey() == -1 ? "" : " [" + GLFW.glfwGetKeyName(m.getKey(), 0).toUpperCase() + "]";
+            if (bindingModule == m) keyName = " [???]";
+            
+            context.drawText(textRenderer, m.getName() + keyName, x + 6, y + 4, color, false);
 
             if (selectedModule == m) {
-                int sx = x + width + 5;
-                int sy = y;
+                int sx = x + width + 5, sy = y;
                 for (Setting s : m.getSettings()) {
                     context.fill(sx, sy, sx + 100, sy + 20, 0xFF121212);
                     context.drawText(textRenderer, s.name + ": " + s.value, sx + 4, sy + 2, 0xFFBBBBBB, false);
-                    
-                    // SLIDER BACKGROUND
                     context.fill(sx + 4, sy + 12, sx + 96, sy + 14, 0xFF202020);
-                    // SLIDER FILL
                     double renderWidth = (s.value - s.min) / (s.max - s.min) * 92;
                     context.fill(sx + 4, sy + 12, (int)(sx + 4 + renderWidth), sy + 14, 0xFF00FBFF);
 
@@ -65,7 +61,7 @@ public class ClickGui extends Screen {
             if (mouseX >= x && mouseX <= x + 120 && mouseY >= y && mouseY <= y + 16) {
                 if (button == 0) m.toggle();
                 if (button == 1) selectedModule = (selectedModule == m) ? null : m;
-                if (button == 2) bindingModule = m; // Orta tık: Bind Başlat
+                if (button == 2) bindingModule = m;
                 return true;
             }
             if (selectedModule == m) {
