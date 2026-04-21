@@ -23,11 +23,11 @@ public class TriggerBot extends Module {
         if (!this.isEnabled() || mc.currentScreen != null || mc.player == null) return;
         
         if (mc.targetedEntity instanceof PlayerEntity target && target.isAlive()) {
-            // Polar Bypass: MS değerine %15 rastgele sapma ekler
-            long dynamicDelay = (long) (ms.getValue() + (rand.nextDouble() * ms.getValue() * 0.15));
+            // Senin MS ayarın + %5-10 arası çok küçük sapma
+            long baseDelay = (long) ms.getValue();
+            long dynamicDelay = baseDelay + rand.nextInt(Math.max(1, (int)(baseDelay * 0.1)));
             
             if (System.currentTimeMillis() - lastHit >= dynamicDelay) {
-                // Attack Event & Swing
                 mc.interactionManager.attackEntity(mc.player, target);
                 mc.player.swingHand(Hand.MAIN_HAND);
                 lastHit = System.currentTimeMillis();
