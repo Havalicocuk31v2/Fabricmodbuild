@@ -19,46 +19,44 @@ public class ClickGui extends Screen {
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         this.renderBackground(context);
-        
-        // --- CLIENT NAME ---
         context.drawText(textRenderer, "havalicocuk31v2", 10, 10, 0xFF00FBFF, true);
 
-        int x = 60, y = 40, width = 110;
-        context.fill(x, y, x + width, y + 16, 0xFF101010);
+        int x = 60, y = 40, width = 120;
+        context.fill(x, y, x + width, y + 16, 0xFF111111);
         context.drawText(textRenderer, "COMBAT", x + 5, y + 4, 0xFFFFFFFF, false);
         
         y += 18;
         for (Module m : Argon.modules) {
-            boolean hovered = mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + 15;
-            context.fill(x, y, x + width, y + 15, hovered ? 0xFF222222 : 0xFF151515);
+            boolean hovered = mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + 16;
+            context.fill(x, y, x + width, y + 16, hovered ? 0xFF252525 : 0xFF181818);
             
             String key = (m.getKey() == -1) ? "NONE" : GLFW.glfwGetKeyName(m.getKey(), 0).toUpperCase();
             if (bindingModule == m) key = "...";
             
-            int color = m.isEnabled() ? 0xFF00FBFF : 0xFFBBBBBB;
-            context.drawText(textRenderer, m.getName() + " [" + key + "]", x + 5, y + 3, color, false);
+            int color = m.isEnabled() ? 0xFF00FBFF : 0xFFFFFFFF;
+            context.drawText(textRenderer, m.getName() + " [" + key + "]", x + 5, y + 4, color, false);
 
             if (selectedModule == m) {
                 int sx = x + width + 5, sy = y;
                 for (Setting s : m.getSettings()) {
-                    context.fill(sx, sy, sx + 100, sy + 18, 0xFF101010);
+                    context.fill(sx, sy, sx + 110, sy + 20, 0xFF111111);
                     if (s.isBoolean) {
-                        int bCol = s.enabled ? 0xFF00FBFF : 0xFF555555;
-                        context.drawText(textRenderer, s.name, sx + 5, sy + 4, bCol, false);
+                        int bCol = s.isEnabled() ? 0xFF00FBFF : 0xFF666666;
+                        context.drawText(textRenderer, s.name, sx + 5, sy + 6, bCol, false);
                     } else {
-                        context.drawText(textRenderer, s.name + ": " + s.value, sx + 5, sy + 2, 0xFFFFFFFF, false);
-                        context.fill(sx + 5, sy + 12, sx + 95, sy + 14, 0xFF333333);
-                        double progress = (s.value - s.min) / (s.max - s.min) * 90;
-                        context.fill(sx + 5, sy + 12, (int)(sx + 5 + progress), sy + 14, 0xFF00FBFF);
+                        context.drawText(textRenderer, s.name + ": " + s.getValue(), sx + 5, sy + 2, 0xFFCCCCCC, false);
+                        context.fill(sx + 5, sy + 14, sx + 105, sy + 16, 0xFF333333);
+                        double progress = (s.getValue() - s.min) / (s.max - s.min) * 100;
+                        context.fill(sx + 5, sy + 14, (int)(sx + 5 + progress), sy + 16, 0xFF00FBFF);
                         if (s.dragging) {
-                            double val = ((mouseX - (sx + 5)) / 90.0) * (s.max - s.min) + s.min;
+                            double val = ((mouseX - (sx + 5)) / 100.0) * (s.max - s.min) + s.min;
                             s.setValue(val);
                         }
                     }
-                    sy += 20;
+                    sy += 22;
                 }
             }
-            y += 16;
+            y += 17;
         }
     }
 
@@ -66,23 +64,23 @@ public class ClickGui extends Screen {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         int x = 60, y = 58;
         for (Module m : Argon.modules) {
-            if (mouseX >= x && mouseX <= x + 110 && mouseY >= y && mouseY <= y + 15) {
+            if (mouseX >= x && mouseX <= x + 120 && mouseY >= y && mouseY <= y + 16) {
                 if (button == 0) m.toggle();
                 if (button == 1) selectedModule = (selectedModule == m) ? null : m;
-                if (button == 2) bindingModule = m; // ORTA TIK: TUŞ ATAMA
+                if (button == 2) bindingModule = m;
                 return true;
             }
             if (selectedModule == m) {
-                int sx = x + 115, sy = y;
+                int sx = x + 125, sy = y;
                 for (Setting s : m.getSettings()) {
-                    if (mouseX >= sx && mouseX <= sx + 100 && mouseY >= sy && mouseY <= sy + 18) {
+                    if (mouseX >= sx && mouseX <= sx + 110 && mouseY >= sy && mouseY <= sy + 20) {
                         if (s.isBoolean) s.toggle(); else s.dragging = true;
                         return true;
                     }
-                    sy += 20;
+                    sy += 22;
                 }
             }
-            y += 16;
+            y += 17;
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }
