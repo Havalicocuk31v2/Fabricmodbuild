@@ -11,11 +11,14 @@ public class TriggerBot extends Module {
     protected static final MinecraftClient mc = MinecraftClient.getInstance();
     private long lastHit = 0;
     private final Random rand = new Random();
-    public Setting ms = new Setting("MS Delay", 100, 10, 1000); // 1000'e çıkarıldı
+
+    public Setting ms = new Setting("MS Delay", 100, 10, 1000);
+    public Setting cooldown = new Setting("Cooldown Sync", true);
 
     public TriggerBot() { 
         super("Trigger Bot", -1);
         addSetting(ms);
+        addSetting(cooldown);
     }
 
     @Override
@@ -23,8 +26,10 @@ public class TriggerBot extends Module {
         if (!this.isEnabled() || mc.currentScreen != null || mc.player == null) return;
         
         if (mc.targetedEntity instanceof PlayerEntity target && target.isAlive()) {
-            // Polar Bypass: Dinamik MS sapması
-            long dynamicDelay = (long) (ms.getValue() + rand.nextInt(30));
+            // Ghost Hit Engelleyici: Sadece vuruş barı dolunca vurur
+            if (cooldown.isEnabled() && mc.player.getAttackCooldownProgress(0.5f) < 0.95f) return;
+
+            long dynamicDelay = (long) (ms.getValue() + rand.nextInt(20));
             
             if (System.currentTimeMillis() - lastHit >= dynamicDelay) {
                 mc.interactionManager.attackEntity(mc.player, target);
