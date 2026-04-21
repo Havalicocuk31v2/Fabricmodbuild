@@ -23,14 +23,13 @@ public class TriggerBot extends Module {
 
     @Override
     public void onTick() {
-        if (!this.isEnabled() || mc.currentScreen != null || mc.player == null) return;
+        if (!this.isEnabled() || !this.isWorking() || mc.currentScreen != null || mc.player == null) return;
         
         if (mc.targetedEntity instanceof PlayerEntity target && target.isAlive()) {
-            // Ghost Hit Engelleyici: Sadece vuruş barı dolunca vurur
             if (cooldown.isEnabled() && mc.player.getAttackCooldownProgress(0.5f) < 0.95f) return;
+            if (!mc.player.canSee(target)) return;
 
             long dynamicDelay = (long) (ms.getValue() + rand.nextInt(20));
-            
             if (System.currentTimeMillis() - lastHit >= dynamicDelay) {
                 mc.interactionManager.attackEntity(mc.player, target);
                 mc.player.swingHand(Hand.MAIN_HAND);
